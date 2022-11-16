@@ -1,0 +1,40 @@
+@Override
+	public JSONObject requestVedioApi(String carText, String channelId) {
+		//请求地址
+		String url = "https://www.v2net.cn:8778/service-open/command/vehicle_realtimevideo";
+
+		// 请求头设置,application/json格式的数据
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.parseMediaType("application/json; charset=UTF-8"));
+
+		//提交参数设置
+		JSONObject json = new JSONObject();
+		json.put("username", "yyfz");
+		json.put("password", "123456");
+		json.put("channelId", channelId);
+		json.put("vehiidno", carText);
+
+		HttpEntity<JSONObject> request = new HttpEntity<>(json, headers);
+
+		//发起请求
+		String response = restTemplate.postForObject(url, request, String.class);
+
+		JSONObject responseJson = JSONObject.parseObject(response);
+
+		if ("车牌号不存在!".equals(responseJson.get("msg"))) {
+			responseJson.put("msg", "无法获取此车视频监控信息，请查看原因");
+		}
+
+		return responseJson;
+	}
+
+
+
+	public <T> T postForObject(String url, @Nullable Object request, Class<T> responseType,
+			Object... uriVariables) throws RestClientException {
+
+		RequestCallback requestCallback = httpEntityCallback(request, responseType);
+		HttpMessageConverterExtractor<T> responseExtractor =
+				new HttpMessageConverterExtractor<>(responseType, getMessageConverters(), logger);
+		return execute(url, HttpMethod.POST, requestCallback, responseExtractor, uriVariables);
+	}
